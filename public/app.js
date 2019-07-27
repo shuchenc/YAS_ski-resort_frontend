@@ -13,37 +13,89 @@ const config =
 
 function init() {
     window.config = config;
-    var d = document.getElementById("query_table");
+    addNavBarClickHandler();
+}
+
+function printTable(table, data) {
+    if (!data) {
+        alert("Nothing retrieved...");
+        return;
+    }
+
+    /* clean the canvas*/
+    table.innerHTML = "";
+
+    var n = data.length;
+    if (n == 0) {
+        alert("Empty table, nothing to print...");
+        return;
+    }
+    const keys = Object.keys(data[0]);
+    var m = keys.length;
+    if (m == 0 || n == 0) {
+        alert("Empty table, nothing to print...");
+        return;
+    }
+    var row, cell, i, j;
+    //print header
+    row = table.insertRow(0);
+    for (j = 0; j < m; j++) {
+        cell = row.insertCell(j);
+        cell.innerHTML = keys[j];
+    }
+    for (i = 0; i < n; i++) {
+        row = table.insertRow(i+1);
+        for (j = 0; j < m; j++) {
+            cell = row.insertCell(j);
+            cell.innerHTML = data[i][keys[j]];
+        }
+    }
+}
+
+function addNavBarClickHandler() {
+    var dom = document.getElementsByClassName("sidenav")[0];
+    var i;
+    console.log(dom.children, dom.children.length);
+    for (i = 0; i < dom.children.length; i++) {
+        dom.children[i].onclick = function () {navElementClicked(this.id);};
+    }
+}
+
+function navElementClicked(id) {
+    var uri = id;
+    if (id == "places") {
+        var end = document.querySelector('#place-filter:checked').value;
+        console.log("end", end);
+        if (end != "all") {
+            uri = uri + "/" + end;
+        }
+    } else if (id == "visits") {
+        var params = "?";
+        params = params + "dayOfWeek=" + document.getElementsByName("dayOfWeek")[0].value;
+        params = params + "&season=" +  document.querySelector('#season-filter:checked').value.toUpperCase();
+        params = params + "&weather=" +  document.querySelector('#weather-filter:checked').value.toUpperCase();
+
+        uri += params;
+    }
+    document.curClickedNavId = id;
+    //console.log(uri);
+    getData(document.getElementById("query_table"), uri, printTable);
+}
+
+function getData(d, uri, next) {
     // jQuery cross domain ajax
+    console.log(config.backend.hostDomain + uri);
     $.ajax({
         type: 'GET',
-        url: "https://yas-ski-resort.herokuapp.com/places",
-        crossDomain: true,
-        headers: {  'Access-Control-Allow-Origin': '*' },
-        //dataType: 'jsonp',
+        url: config.backend.hostDomain + uri,
         success: (function (data) {
-            console.log(data);
+            next(d, data);
         }),
         error: function() { alert('Failed!'); }
     });
 }
 
-function getData(d, uri) {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', config.backend.hostDomain+uri);
-    //xhr.setRequestHeader("Access-Control-Request-Headers", "x-requested-with");
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            d.innerHTML = xhr.responseText;
-        }
-        else {
-            alert('Request failed.  Returned status of ' + xhr.status);
-        }
-    };
-    xhr.send();
-  }
-
-  function createXMLHttp() {
+function createXMLHttp() {
     //If XMLHttpRequest is available then using it
     if (typeof XMLHttpRequest !== undefined) {
       return new XMLHttpRequest;

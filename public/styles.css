@@ -13,5 +13,34 @@
 	padding: 1em;
 }
 .wrapper > div:nth-child(odd) {
-	background: #aaff;
+	background: #eeeeee;
+}
+
+#query_table_div {
+    border-style: solid;
+    border-width: 1px;
+}
+
+table {
+    table-layout: auto;
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table .absorbing-column {
+    width: 100%;
+}
+
+table td {
+    border: 1px solid black;
+}
+
+.sidenav > div {
+    border: 1px solid black;
+    padding: 1em;
+}
+
+.dropdown {
+    border: 1px solid #dddddd;
+    padding: 1em;
 }
