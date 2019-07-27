@@ -1,0 +1,15 @@
+{
+	"root": null,
+	"server": {
+		"port": 3000
+	},
+	"db": {
+		"URL": "bolt://hobby-iekihenlakdagbkeclogcjdl.dbs.graphenedb.com:24787",
+		"username": "app140927832-IH7vmI",
+		"password": "b.NRucqiEr48F8.XBjkdiyczzFF8C1l"
+	},
+	"backend": {
+		"hostDomain": "https://yas-ski-resort.herokuapp.com/",
+		"backupDomain": "http://localhost:8080"
+    }
+}
