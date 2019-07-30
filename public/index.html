@@ -13,10 +13,11 @@
         <div class="sidenav">
             <div id="places">Places <br>
                 <div class="dropdown">
-                    <form>
-                        <input type="radio" id="place-filter" name="Places" value="all" checked> all<br>
-                        <input type="radio" id="place-filter" name="Places" value="lifts"> lifts <br>
-                        <input type="radio" id="place-filter" name="Places" value="restaurants"> restaurants
+                    <form id="place-filter">
+                        <input type="radio" id="1" name="Places" value="all" checked> <label for="1"> all </label> <br>
+                        <input type="radio" id="2" name="Places" value="lifts"> <label for="2"> lifts </label> <br>
+                        <input type="radio" id="3" name="Places" value="restaurants"> <label for="3"> restaurants </label> <br>
+                        <input type="radio" id="4" name="Places" value="other"> <label for="4"> other:<input type="text" id="other_place_name" value=""/>​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​​ </label>
                     </form>
                 </div>
             </div>
@@ -24,34 +25,38 @@
             <div id="skiers">Skiers</div>
             <div id="visits">Visits
                 <div class="dropdown">
-                    <form id="visit-filter">
-                        <div>
-                            dayOfWeek:<input type="text" name="dayOfWeek" value="0"><br> 
-                        </div>
-                        <div>
-                            Season:<br>
-                            <form>
-                                <input type="radio" id="season-filter" name="Season" value="early" checked> early<br>
-                                <input type="radio" id="season-filter" name="Season" value="regular"> regular<br>
-                                <input type="radio" id="season-filter" name="Season" value="peak"> peak<br>
-                                <input type="radio" id="season-filter" name="Season" value="late"> late
-                            </form>
-                        </div>
-                        <div>
-                            Weather:<br>
-                            <form>
-                                <input type="radio" id="weather-filter" name="Weather" value="good" checked> good<br>
-                                <input type="radio" id="weather-filter" name="Weather" value="normal"> normal<br>
-                                <input type="radio" id="weather-filter" name="Weather" value="bad"> bad
-                            </form>
-                        </div>
-                        <input type="submit" value="Submit">
-                    </form>
+                    <div>
+                        dayOfWeek:
+                        <select id="dayOfWeek" name="dayOfWeek">
+                            <option value="0" selected="selected">Sun</option>
+                            <option value="1">Mon</option>
+                            <option value="2">Tue</option>
+                            <option value="2">Wed</option>
+                        </select>
+                    </div>
+                    <div>
+                        Season:
+                        <select id="Season" name="Season">
+                            <option value="early">early</option>
+                            <option value="regular" selected="selected">regular</option>
+                            <option value="Peak">peak</option>
+                            <option value="Late">late</option>
+                        </select>
+                    </div>
+                    <div>
+                        Weather:
+                        <select id="Weather" name="Weather">
+                            <option value="good"> good </option>
+                            <option value="normal" selected="selected"> normal </option>
+                            <option value="bad"> bad </option>
+                        </select>
+                    </div>
                 </div>
             </div>
         </div>
 
         <div id="query_table_div">
+            <div><div id="query_table_info"></div><button id="refresh_button"> Refresh </button></div>
             <table id="query_table"></table> 
         </div>
     </div>

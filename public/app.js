@@ -13,23 +13,57 @@ const config =
 
 function init() {
     window.config = config;
+    document.cache = {};
     addNavBarClickHandler();
+    document.defaultQuery = { 
+        uri: "/places",
+        dom_id: "places"
+    };
+    var uri, id;
+    document.getElementById("refresh_button").onclick = (() => getData(makeUri(), id, printTable));
 }
 
-function printTable(table, data) {
+function parseData(clicked_dom_id, data) {
+    // parse
+    //console.log(Object.keys(data[0]));
+    if (clicked_dom_id == "visits" && data.length > 0 && "relationship" in data[0]) {
+        var row;
+        data.forEach((e, i, arr) => {
+            row = {};
+            row.sid = e.skier.sid;
+            row.skillLevel = e.skier.skillLevel
+            row.place = e.place.name;
+            row.timeIn = e.relationship.timeIn;
+            row.timeOut = e.relationship.timeOut;
+            
+            data[i] = row;
+        });
+    }
+    return data;
+} 
+
+function printTable(data, table_id) {
     if (!data) {
         alert("Nothing retrieved...");
         return;
     }
 
+    table_id = table_id || "query_table";
+    var table = document.getElementById(table_id);
+    var table_info = document.getElementById(`${table_id}_info`);
     /* clean the canvas*/
     table.innerHTML = "";
-
+    table_info.innerHTML = "";
+    
+    if (!Array.isArray(data)) {
+        data = [data];
+    }
     var n = data.length;
     if (n == 0) {
         alert("Empty table, nothing to print...");
         return;
     }
+    table_info.innerHTML = `Fetching ${n} rows...`;
     const keys = Object.keys(data[0]);
     var m = keys.length;
     if (m == 0 || n == 0) {
@@ -37,6 +71,7 @@ function printTable(table, data) {
         return;
     }
     var row, cell, i, j;
+    console.log(`Printing ${n} rows...`);
     //print header
     row = table.insertRow(0);
     for (j = 0; j < m; j++) {
@@ -50,6 +85,7 @@ function printTable(table, data) {
             cell.innerHTML = data[i][keys[j]];
         }
     }
+    table_info.innerHTML = `${n} rows fetched.`;
 }
 
 function addNavBarClickHandler() {
@@ -57,60 +93,80 @@ function addNavBarClickHandler() {
     var i;
     console.log(dom.children, dom.children.length);
     for (i = 0; i < dom.children.length; i++) {
-        dom.children[i].onclick = function () {navElementClicked(this.id);};
+        dom.children[i].onclick = function () {
+            for (var j = 0; j < this.parentElement.children.length; j++) {
+                this.parentElement.children[j].classList.remove("highlight");
+            }
+            this.classList.add("highlight");
+            navElementClicked(this.id);
+        };
     }
 }
 
 function navElementClicked(id) {
+    document.curClickedNavId = id;
+    var uri = makeUri(id);
+    //console.log(uri);
+    setStates(id, uri);
+}
+
+function setStates(id, uri, conditions) {
+    document.curClickedNavId = id;
+    document.curQueryUri = uri;
+}
+
+function makeUri(id) {
+    id = id || document.curClickedNavId || document.defaultQuery.dom_id;
     var uri = id;
     if (id == "places") {
-        var end = document.querySelector('#place-filter:checked').value;
+        var end = document.querySelector('input[name="Places"]:checked').value;
         console.log("end", end);
-        if (end != "all") {
+        if (end == "other") {
+            console.log(document.getElementById("other_place_name").value);
+            uri = uri + "/" + document.getElementById("other_place_name").value;
+        } else if (end != "all") {
             uri = uri + "/" + end;
         }
     } else if (id == "visits") {
+        uri += getConditionsUri();
+    }
+    return uri;
+}
+
+function getConditionsUri() {
+    var condition_uri = "";
+    if (!document.curConditions) {
         var params = "?";
-        params = params + "dayOfWeek=" + document.getElementsByName("dayOfWeek")[0].value;
-        params = params + "&season=" +  document.querySelector('#season-filter:checked').value.toUpperCase();
-        params = params + "&weather=" +  document.querySelector('#weather-filter:checked').value.toUpperCase();
+        params = params + "dayOfWeek=" + document.getElementById("dayOfWeek").value;
+        params = params + "&season=" +  document.getElementById("Season").value.toUpperCase();
+        params = params + "&weather=" +  document.getElementById("Weather").value.toUpperCase();
 
-        uri += params;
+        condition_uri += params;
     }
-    document.curClickedNavId = id;
-    //console.log(uri);
-    getData(document.getElementById("query_table"), uri, printTable);
+    return condition_uri;
 }
 
-function getData(d, uri, next) {
-    // jQuery cross domain ajax
-    console.log(config.backend.hostDomain + uri);
-    $.ajax({
-        type: 'GET',
-        url: config.backend.hostDomain + uri,
-        success: (function (data) {
-            next(d, data);
-        }),
-        error: function() { alert('Failed!'); }
-    });
-}
-
-function createXMLHttp() {
-    //If XMLHttpRequest is available then using it
-    if (typeof XMLHttpRequest !== undefined) {
-      return new XMLHttpRequest;
-    //if window.ActiveXObject is available than the user is using IE...so we have to create the newest version XMLHttp object
-    } else if (window.ActiveXObject) {
-      var ieXMLHttpVersions = ['MSXML2.XMLHttp.5.0', 'MSXML2.XMLHttp.4.0', 'MSXML2.XMLHttp.3.0', 'MSXML2.XMLHttp', 'Microsoft.XMLHttp'],
-          xmlHttp;
-      //In this array we are starting from the first element (newest version) and trying to create it. If there is an
-      //exception thrown we are handling it (and doing nothing ^^)
-      for (var i = 0; i < ieXMLHttpVersions.length; i++) {
-        try {
-          xmlHttp = new ActiveXObject(ieXMLHttpVersions[i]);
-          return xmlHttp;
-        } catch (e) {
-        }
-      }
+function getData(uri, dom_id, next) {
+    uri = uri || document.curQueryUri || document.defaultQuery.uri;
+    dom_id = dom_id || document.curClickedNavId || document.defaultQuery.dom_id;
+    if (document.cache[uri]) {
+        console.log("found cached data");
+        var data = document.cache[uri];
+        next(data);
+    } else {
+        // not found in cache, 
+        // jQuery cross domain ajax
+        console.log(`fetching data from backend api: ${config.backend.hostDomain + uri}`);
+        $.ajax({
+            type: 'GET',
+            url: config.backend.hostDomain + uri,
+            success: (function (data) {
+                console.log(`${data.length} rows of data fetched successfully from ${uri}`);
+                var parsed = parseData(dom_id, data);
+                document.cache[uri] = data; // cache the results
+                next(data);
+            }),
+            error: function() { alert('Failed!'); }
+        });
     }
-  }
+}
