@@ -7,6 +7,7 @@
     justify-items: stretch; /* x-axis center, end, stretch */
     align-items: stretch; /* y-axis */
     /* justify and align can also be applied to individual components using align-self: start; */
+    /* position: fixed; */
 }
 .wrapper > div {
 	background: #ccffe5;
@@ -21,8 +22,8 @@
     border-width: 1px;
     font-family: "Lucida console";
     font-size: 0.75em;
-    grid-column: 2;
-    grid-row: 1/3;
+    /* grid-column: 2;
+    grid-row: 1/3; */
 }
 
 #query_table_info {
@@ -34,7 +35,7 @@
     align-items: start;
 }
 
-#other_place_name {
+input {
     display: inline-block;
 }
 
@@ -86,3 +87,25 @@ button {
     cursor: pointer;
     float: right;
 }
+
+
+a.toggler {
+    float: right;
+    background: green;
+    cursor: pointer;
+    border: 2px solid black;
+    border-right-width: 15px;
+    padding: 0 5px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all .5s ease;
+}
+
+a.toggler.off {
+    background: red;
+    border-right-width: 2px;
+    border-left-width: 15px;
+}
+
+
+.bar { fill: steelblue; }

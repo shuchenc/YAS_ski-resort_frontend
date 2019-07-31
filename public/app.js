@@ -13,6 +13,7 @@ const config =
 
 function init() {
     window.config = config;
+    window.curCanvas = 0;
     document.cache = {};
     addNavBarClickHandler();
     document.defaultQuery = { 
@@ -20,6 +21,11 @@ function init() {
         dom_id: "places"
     };
     var uri, id;
+    window.addEventListener('keyup', event => {
+        if (event.keyCode === 13) {
+            getData(makeUri(), id, printTable);
+        }
+    });
     document.getElementById("refresh_button").onclick = (() => getData(makeUri(), id, printTable));
 }
 
@@ -73,19 +79,137 @@ function printTable(data, table_id) {
     var row, cell, i, j;
     console.log(`Printing ${n} rows...`);
     //print header
-    row = table.insertRow(0);
+    row = document.createElement('tr');
     for (j = 0; j < m; j++) {
         cell = row.insertCell(j);
         cell.innerHTML = keys[j];
     }
+    table.appendChild(row);
     for (i = 0; i < n; i++) {
-        row = table.insertRow(i+1);
+        //row = table.insertRow(i+1);
+        row = document.createElement('tr');
         for (j = 0; j < m; j++) {
-            cell = row.insertCell(j);
+            //cell = row.insertCell(j);
+            cell = document.createElement('td');
             cell.innerHTML = data[i][keys[j]];
+            row.appendChild(cell);
         }
+        table.appendChild(row);
     }
     table_info.innerHTML = `${n} rows fetched.`;
+    plotGraph(document.getElementById("query_table_div").offsetWidth, 750);
+}
+
+function plotGraph(svgWidth, svgHeight, id) {
+    // javascript
+    //var id = document.curClickedNavId;
+    id = id || document.curClickedNavId || "visits";
+    var data = document.cache[makeUri(id)];
+    if (!data) {
+        return;
+    }
+    d3.select("svg").selectAll("*").remove();
+    var n = data.length;
+    var map = {};
+    var keyword;
+    if (id == "visits") {
+        keyword = "place";
+    } else if (id == "skiers") {
+        keyword = "skillLevel";
+    } else if (id == "places") {
+        keyword = "type";
+    } else {
+        return;
+    }
+    for (var i = 0; i < n; i++) {
+        var place = data[i][keyword];
+        if (place in map) {
+            map[place] += 1;
+        } else {
+            map[place] = 1;
+        }
+    }
+    //var dataset = [80, 100, 56, 120, 180, 30, 40, 120, 160];
+    var key=[];
+    var dataset=[];
+    Object.keys(map).forEach(function(k){
+        key.push(k);
+        dataset.push(map[k]);
+    });
+
+    svgWidth = svgWidth || 500;
+    svgHeight = svgHeight || 300;
+    var barPadding = 2;
+    // set the dimensions and margins of the graph
+    var margin = {top: 60, right: 20, bottom: 100, left: 40},
+    width = svgWidth - margin.left - margin.right,
+    height = svgHeight - margin.top - margin.bottom;
+    var barWidth = (width / dataset.length);
+
+
+    var svg = d3.select('svg')
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .append("g")
+        .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scaleBand()
+          .range([0, width])
+          .padding(0.1)
+          .domain(key);
+
+    var xAxis = d3.axisBottom(x);
+    var xAxisTranslate = height;
+
+    var yScale = d3.scaleLinear()
+        .domain([0, d3.max(dataset)])
+        .range([0, height]);
+        
+    var barChart = svg.selectAll("rect")
+        .data(dataset)
+        .enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("y", function(d) {
+            return height - yScale(d);
+        })
+        .attr("height", function(d) { 
+            return yScale(d); 
+        })
+        .attr("width", barWidth - barPadding)
+        .attr("transform", "translate(0, " + margin.top  +")")
+        .attr("transform", function (d, i) {
+            var translate = [barWidth * i, 0]; 
+            return "translate("+ translate +")";
+        });
+
+    var text = svg.selectAll("text")
+        .data(dataset)
+        .enter()
+        .append("text")
+        .text(function(d) {
+            return d;
+        })
+        .attr("y", function(d, i) {
+            return height - yScale(d) - 5;
+        })
+        .attr("x", function(d, i) {
+            return barWidth * i;
+        })
+        .attr("fill", "#A64C38");
+
+    var x = svg.append("g")
+        .attr("transform", "translate(0, " + xAxisTranslate  +")")
+        .style("text-anchor", "middle")
+        .call(xAxis)
+        .selectAll("text")	
+            .style("text-anchor", "end")
+            .attr("dx", "-.8em")
+            .attr("dy", ".15em")
+            .attr("transform", function(d) {
+                return "rotate(-70)" 
+                });
 }
 
 function addNavBarClickHandler() {

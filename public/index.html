@@ -6,6 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="stylesheet" href="static/styles.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
     <title>YAS Ski Resort</title>
 </head>
 <body>
@@ -56,8 +57,17 @@
         </div>
 
         <div id="query_table_div">
-            <div><div id="query_table_info"></div><button id="refresh_button"> Refresh </button></div>
-            <table id="query_table"></table> 
+            <div>
+                <div id="query_table_info"></div>
+                <a class="toggler">&nbsp;</a>
+                <button id="refresh_button"> Refresh </button>
+            </div>
+            <div id="canvas1">
+                <table id="query_table"></table> 
+            </div>
+            <div id="canvas2" style="display:none;">
+                <svg id="query_graph"></svg>
+            </div>
         </div>
     </div>
 </body>
@@ -80,5 +90,16 @@
     loadApiScript("static/app.js", (function () {
       init()
     }));
+
+    $(document).ready(function(){
+        $('a.toggler').click(function(){
+            $(this).toggleClass('off');
+            var canvas = ["#canvas1", "#canvas2"];
+            var idx = window.curCanvas;
+            $(canvas[1-idx]).show();
+            $(canvas[idx]).hide();
+            window.curCanvas = 1 - window.curCanvas;
+        });
+    });
 </script>
 </html>
