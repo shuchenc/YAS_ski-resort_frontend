@@ -27,6 +27,42 @@ function init() {
         }
     });
     document.getElementById("refresh_button").onclick = (() => getData(makeUri(), id, printTable));
+    document.getElementById("export_button").onclick = (() => exportTableToCSV())
+}
+
+function getCurClickedNav() {
+    return document.curClickedNavId || document.defaultQuery.dom_id;
+}
+
+function downloadCSV(csv, filename) {
+    var csvFile;
+    var downloadLink;
+    csvFile = new Blob([csv], {type:"text/csv"});
+
+    downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+
+    downloadLink.click();
+}
+
+function exportTableToCSV(filename) {
+    if (!filename) {
+        filename = `${getCurClickedNav()}.csv`;
+    }
+    var csv = [];
+    var rows = document.querySelectorAll("table tr");
+
+    for (var i=0; i < rows.length; i++) {
+        var row = [], cols = rows[i].querySelectorAll("td, th");
+        for (var j = 0; j < cols.length; j++) {
+            row.push(cols[j].innerHTML.replace(",", "|"));
+        }
+        csv.push(row.join(","));
+    }
+
+    downloadCSV(csv.join("\n"), filename);
 }
 
 function parseData(clicked_dom_id, data) {
@@ -76,21 +112,24 @@ function printTable(data, table_id) {
         alert("Empty table, nothing to print...");
         return;
     }
-    var row, cell, i, j;
+    var headRow, row, cell, i, j;
     console.log(`Printing ${n} rows...`);
     //print header
-    row = document.createElement('tr');
+    headRow = document.createElement("tr");
     for (j = 0; j < m; j++) {
-        cell = row.insertCell(j);
+        cell = document.createElement("th");
         cell.innerHTML = keys[j];
+        cell.addEventListener("click", item(j)); // to sort it
+        headRow.appendChild(cell);
     }
-    table.appendChild(row);
+    table.appendChild(headRow);
+    //print body
     for (i = 0; i < n; i++) {
         //row = table.insertRow(i+1);
-        row = document.createElement('tr');
+        row = document.createElement("tr");
         for (j = 0; j < m; j++) {
             //cell = row.insertCell(j);
-            cell = document.createElement('td');
+            cell = document.createElement("td");
             cell.innerHTML = data[i][keys[j]];
             row.appendChild(cell);
         }
@@ -100,10 +139,74 @@ function printTable(data, table_id) {
     plotGraph(document.getElementById("query_table_div").offsetWidth, 750);
 }
 
+function item(c){
+    return function(){
+        console.log(c)
+        sortTable(c, "query_table");
+    }
+}
+
+function sortTable(n, table_id) {
+    // algorithm refered to w3school at https://www.w3schools.com/howto/howto_js_sort_table.asp
+    table_id = table_id || "query_table";
+    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    table = document.getElementById(table_id);
+    switching = true;
+    // Set the sorting direction to ascending:
+    dir = "asc"; 
+    /* Make a loop that will continue until
+    no switching has been done: */
+    while (switching) {
+        // Start by saying: no switching is done:
+        switching = false;
+        rows = table.rows;
+        /* Loop through all table rows (except the
+        first, which contains table headers): */
+        for (i = 1; i < (rows.length - 1); i++) {
+            // Start by saying there should be no switching:
+            shouldSwitch = false;
+            /* Get the two elements you want to compare,
+            one from current row and one from the next: */
+            x = rows[i].getElementsByTagName("TD")[n];
+            y = rows[i + 1].getElementsByTagName("TD")[n];
+            /* Check if the two rows should switch place,
+            based on the direction, asc or desc: */
+            if (dir == "asc") {
+                if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                    // If so, mark as a switch and break the loop:
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (dir == "desc") {
+                if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                    // If so, mark as a switch and break the loop:
+                    shouldSwitch = true;
+                    break;
+                }
+            }
+        }
+        if (shouldSwitch) {
+            /* If a switch has been marked, make the switch
+            and mark that a switch has been done: */
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+            // Each time a switch is done, increase this count by 1:
+            switchcount ++; 
+        } else {
+            /* If no switching has been done AND the direction is "asc",
+            set the direction to "desc" and run the while loop again. */
+            if (switchcount == 0 && dir == "asc") {
+                dir = "desc";
+                switching = true;
+            }
+        }
+    }
+}
+
 function plotGraph(svgWidth, svgHeight, id) {
     // javascript
     //var id = document.curClickedNavId;
-    id = id || document.curClickedNavId || "visits";
+    id = id || getCurClickedNav();
     var data = document.cache[makeUri(id)];
     if (!data) {
         return;
@@ -240,7 +343,7 @@ function setStates(id, uri, conditions) {
 }
 
 function makeUri(id) {
-    id = id || document.curClickedNavId || document.defaultQuery.dom_id;
+    id = id || getCurClickedNav();
     var uri = id;
     if (id == "places") {
         var end = document.querySelector('input[name="Places"]:checked').value;

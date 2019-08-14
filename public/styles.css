@@ -53,6 +53,14 @@ table .absorbing-column {
 table td {
     border: 1px solid black;
     padding: 0.25em;
+    cursor: cell;
+}
+
+table th {
+    border: 1px solid black;
+    padding: 0.5em;
+    cursor: pointer;
+    align-content: flex-start;
 }
 
 table tr {
@@ -60,9 +68,6 @@ table tr {
     padding: 0.25em;
 }
 
-table tr td {
-    cursor: cell;
-}
 
 .sidenav > div {
     border: 1px solid black;
@@ -86,6 +91,7 @@ table tr td {
 button {
     cursor: pointer;
     float: right;
+    margin: 3px 3px;
 }
 
 
@@ -99,6 +105,7 @@ a.toggler {
     border-radius: 5px;
     text-decoration: none;
     transition: all .5s ease;
+    margin: 3px 3px;
 }
 
 a.toggler.off {
